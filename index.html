@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>WebGL Demo</title>
+
+    <script type="text/javascript" src="js/glMatrix.js"></script>
+    <script type="text/javascript" src="js/webgl-utils.js"></script>
+
+    <script id="color-shader-fs" type="x-shader/x-fragment">
+      precision mediump float;
+
+      varying vec4 vColor;
+
+      void main(void) {
+        gl_FragColor = vColor;
+      }
+    </script>
+
+    <script id="color-shader-vs" type="x-shader/x-vertex">
+      attribute vec3 aVertexPosition;
+      attribute vec4 aVertexColor;
+
+      uniform mat4 uMVMatrix;
+      uniform mat4 uPMatrix;
+
+      varying vec4 vColor;
+
+      void main(void) {
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        vColor = aVertexColor;
+      }
+    </script>
+
+    <script id="postprocess-shader-fs" type="x-shader/x-fragment">
+      precision mediump float;
+
+      varying vec2 vTexcoord;
+
+      uniform sampler2D uSampler;
+
+      uniform float uStrength;
+
+      void main(void) {
+        vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+
+        float kernelSum = 0.0;
+
+        for(int y=-5; y<=5; ++y) {
+          for(int x=-5; x<=5; ++x) {
+            float dx = float(x) * 0.01;
+            float dy = float(y) * 0.01;
+
+            vec2 texcoord = vec2(vTexcoord.s + dx, vTexcoord.t + dy);
+
+            float kernel = exp((-dx*dx - dy*dy) * uStrength);
+
+            color = color + texture2D(uSampler, texcoord) * kernel;
+
+            kernelSum = kernelSum + kernel;
+          }
+        }
+
+        gl_FragColor = vec4(
+            1.0 - exp(-color.x / kernelSum),
+            1.0 - exp(-color.y / kernelSum),
+            1.0 - exp(-color.z / kernelSum), 1.0);
+      }
+    </script>
+
+    <script id="postprocess-shader-vs" type="x-shader/x-vertex">
+      attribute vec3 aVertexPosition;
+      attribute vec2 aVertexTexcoord;
+
+      varying vec2 vTexcoord;
+
+      void main(void) {
+        gl_Position = vec4(aVertexPosition, 1.0);
+        vTexcoord = aVertexTexcoord;
+      }
+    </script>
+
+    <script type="text/javascript" src="js/tables.js"></script>
+    <script type="text/javascript" src="js/mcubes.js"></script>
+    <script type="text/javascript" src="js/fields.js"></script>
+
+    <script type="text/javascript" src="js/gl.js"></script>
+    <script type="text/javascript" src="js/demo.js"></script>
+  </head>
+
+  <body onload="webGLStart();">
+    <canvas id="demo-canvas" 
+      style="border: none;" width="512"
+      height="512"></canvas>
+
+    <br/>
+
+    Marching cubes resolution:
+    <select id="resolution">
+        <option value="10">10</option>
+        <option value="15">15</option>
+        <option value="20">20</option>
+        <option value="25" selected="selected">25</option>
+        <option value="30">30</option>
+        <option value="35">35</option>
+        <option value="40">40</option>
+    </select>
+
+    <br/>
+
+    Blur strength:
+    <select id="strength">
+        <option value="40000">1</option>
+        <option value="30000">2</option>
+        <option value="20000">3</option>
+        <option value="10000" selected="selected">4</option>
+        <option value="1000">6</option>
+        <option value="100">7</option>
+        <option value="10">8</option>
+    </select>
+  </body>
+</html>

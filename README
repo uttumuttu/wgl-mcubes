@@ -1,0 +1,5 @@
+This is my WebGL implementation of the classic marching
+cubes algorithm, with shader-based post-processing
+blur, from 2013. The code is not very well documented;
+it was basically a quick project to see much
+raw computing performance can be squeezed out of JavaScript.
